@@ -31,8 +31,7 @@ pub fn expand_if_file_pattern(file_pattern: String) -> Result<Vec<String>, Strin
 
     for path in paths {
         if let Ok(path) = path {
-            let abs_path: PathBuf = fs::canonicalize(path).map_err(|err| err.to_string())?;
-            matched_files.push(abs_path.to_string_lossy().to_string());
+            matched_files.push(path.to_string_lossy().to_string());
         }
     }
 

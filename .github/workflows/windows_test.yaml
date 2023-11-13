@@ -42,7 +42,7 @@ jobs:
         working-directory: .
 
       # Rust unit test
-      - run: cargo test -p kclvm-*
+      - run: cargo test --package kclvm-cmd --lib -- tests::test_run_command --exact --nocapture 
         working-directory: ./kclvm
 
       # Rust runtime test

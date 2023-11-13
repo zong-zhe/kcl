@@ -219,18 +219,31 @@ fn test_lint_cmd() {
 // All the unit test cases in [`test_run_command`] can not be executed concurrently.
 fn test_run_command() {
     test_vet_cmd();
+    println!("{:?}", "test_vet_cmd() PASS");
     test_run_command_with_import();
+    println!("{:?}", "test_run_command_with_import() PASS");
     test_run_command_with_konfig();
+    println!("{:?}", "test_run_command_with_konfig() PASS");
     test_load_cache_with_different_pkg();
+    println!("{:?}", "test_load_cache_with_different_pkg() PASS");
     test_kcl_path_is_sym_link();
+    println!("{:?}", "test_kcl_path_is_sym_link() PASS");
     test_compile_two_kcl_mod();
+    println!("{:?}", "test_compile_two_kcl_mod() PASS");
     test_main_pkg_not_found();
+    println!("{:?}", "test_main_pkg_not_found() PASS");
     test_multi_mod_file();
+    println!("{:?}", "test_multi_mod_file() PASS");
     test_instances_with_yaml();
+    println!("{:?}", "test_instances_with_yaml() PASS");
     test_plugin_not_found();
+    println!("{:?}", "test_plugin_not_found() PASS");
     test_error_message_fuzz_matched();
+    println!("{:?}", "test_error_message_fuzz_matched() PASS");
     test_error_message_fuzz_unmatched();
+    println!("{:?}", "test_error_message_fuzz_unmatched() PASS");
     test_keyword_argument_error_message();
+    println!("{:?}", "test_keyword_argument_error_message() PASS");
 }
 
 fn test_run_command_with_import() {
@@ -333,6 +346,7 @@ fn check_run_command_with_env(test_case_path: PathBuf, kcl_pkg_path_env: String)
     assert_eq!(String::from_utf8(buf).unwrap(), expect);
 }
 
+#[test]
 fn test_kcl_path_is_sym_link() {
     let origin = "./src/test_data/sym_link/origin";
     let link = "./src/test_data/sym_link/sym_link";
