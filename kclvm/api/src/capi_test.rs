@@ -60,6 +60,15 @@ fn test_c_api_call_override_file() {
     );
 }
 
+// #[test]
+fn test_c_api_get_schema_type_1() {
+    test_c_api_without_wrapper::<GetSchemaTypeArgs1, GetSchemaTypeMappingResult>(
+        "KclvmService.GetSchemaType1",
+        "get-schema-type-1.json",
+        "get-schema-type-1.response.json",
+    );
+}
+
 #[test]
 fn test_c_api_get_schema_type_mapping() {
     test_c_api_without_wrapper::<GetSchemaTypeMappingArgs, GetSchemaTypeMappingResult>(

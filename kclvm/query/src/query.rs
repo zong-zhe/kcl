@@ -135,3 +135,64 @@ fn resolve_file(file: &str, code: Option<&str>) -> Result<Rc<RefCell<Scope>>> {
         None => Err(anyhow::anyhow!("main scope is not found")),
     }
 }
+
+pub struct CompilationOptions {
+    pub k_files: Vec<String>,
+    pub loader_opts: LoadProgramOptions,
+    pub resolve_opts: Options,
+    pub get_schema_opts: GetSchemaOption,
+}
+
+pub fn get_schema_type_1(
+    schema_name: Option<&str>,
+    opts: CompilationOptions,
+) -> Result<IndexMap<String, SchemaType>> {
+    let mut result = IndexMap::new();
+    let scope = resolve_file_1(&opts)?;
+    for (name, o) in &scope.borrow().elems {
+        if o.borrow().ty.is_schema() {
+            let schema_ty = o.borrow().ty.into_schema_type();
+            if opts.get_schema_opts == GetSchemaOption::All
+                || (opts.get_schema_opts == GetSchemaOption::Definitions && !schema_ty.is_instance)
+                || (opts.get_schema_opts == GetSchemaOption::Instances && schema_ty.is_instance)
+            {
+                // Schema name filter
+                match schema_name {
+                    Some(schema_name) => {
+                        if schema_name == name {
+                            result.insert(name.to_string(), schema_ty);
+                        }
+                    }
+                    None => {
+                        result.insert(name.to_string(), schema_ty);
+                    }
+                }
+            }
+        }
+    }
+    Ok(result)
+}
+
+fn resolve_file_1(opts: &CompilationOptions) -> Result<Rc<RefCell<Scope>>> {
+    let sess = Arc::new(ParseSession::default());
+    let mut program = match load_program(
+        sess,
+        &opts.k_files.iter().map(AsRef::as_ref).collect::<Vec<_>>(),
+        Some(opts.loader_opts.clone()),
+        None,
+    ) {
+        Ok(p) => p,
+        Err(err) => {
+            return Err(anyhow::anyhow!("{err}"));
+        }
+    };
+    let scope = resolve_program_with_opts(
+        &mut program,
+        opts.resolve_opts.clone(),
+        None,
+    );
+    match scope.main_scope() {
+        Some(scope) => Ok(scope.clone()),
+        None => Err(anyhow::anyhow!("main scope is not found")),
+    }
+}

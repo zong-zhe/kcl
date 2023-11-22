@@ -91,6 +91,14 @@ fn register_kclvm_service(io: &mut IoHandler) {
         };
         futures::future::ready(catch!(kclvm_service_impl, args, get_schema_type))
     });
+    io.add_method("KclvmService.GetSchemaType1", |params: Params| {
+        let kclvm_service_impl = KclvmServiceImpl::default();
+        let args: GetSchemaTypeArgs1 = match params.parse() {
+            Ok(val) => val,
+            Err(err) => return futures::future::ready(Err(err)),
+        };
+        futures::future::ready(catch!(kclvm_service_impl, args, get_schema_type_1))
+    });
     io.add_method("KclvmService.GetSchemaTypeMapping", |params: Params| {
         let kclvm_service_impl = KclvmServiceImpl::default();
         let args: GetSchemaTypeMappingArgs = match params.parse() {

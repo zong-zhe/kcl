@@ -1,0 +1,15 @@
+{
+	"exec_options": {
+		"work_dir" : "/Users/zongz/Workspace/kusionstack/kcl/kclvm/api/src/testdata/get_schema_ty/aaa",
+		"k_filename_list":[
+			"/Users/zongz/Workspace/kusionstack/kcl/kclvm/api/src/testdata/get_schema_ty/aaa/main.k"
+		],
+		"external_pkgs": [
+			{
+			  "pkg_name": "bbb",
+			  "pkg_path": "/Users/zongz/Workspace/kusionstack/kcl/kclvm/api/src/testdata/get_schema_ty/bbb"
+			}
+		]
+	},
+	"schema_name": "B"
+}
