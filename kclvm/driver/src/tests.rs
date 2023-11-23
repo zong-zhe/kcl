@@ -219,6 +219,7 @@ fn test_fill_pkg_maps_for_k_file() {
     assert_eq!(format!("{:?}", opts.package_maps), "{}");
 
     let res = fill_pkg_maps_for_k_file(path.clone(), &mut opts);
+    println!("{:?}", res);
     assert!(res.is_ok());
     let vendor_home = get_vendor_home();
 
@@ -289,6 +290,7 @@ fn test_fetch_metadata() {
     let vendor_home = get_vendor_home();
 
     let metadata = fetch_metadata(path.clone());
+    println!("{:?}", metadata);
     assert_eq!(metadata.is_err(), false);
     let pkgs = metadata.unwrap().packages.clone();
     assert_eq!(pkgs.len(), 1);
