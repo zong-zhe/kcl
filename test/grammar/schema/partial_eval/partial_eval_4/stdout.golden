@@ -1,9 +1,0 @@
-config:
-  config:
-    volumes:
-    - name: kubeconfig
-      volumeSource:
-        medium: ''
-    - name: log-storage
-      volumeSource:
-        medium: Memory

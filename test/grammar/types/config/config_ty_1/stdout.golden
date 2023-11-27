@@ -1,7 +1,0 @@
-config:
-  key:
-  - key: value
-  values:
-  - foo
-  - bar
-a: 1

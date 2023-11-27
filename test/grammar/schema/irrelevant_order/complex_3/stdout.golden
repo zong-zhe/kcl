@@ -1,4 +1,0 @@
-app:
-  name: user
-  container: user
-  globalApp: app

@@ -1,5 +1,0 @@
-config:
-  main:
-    env:
-    - name: ENV_2
-      value: '2'

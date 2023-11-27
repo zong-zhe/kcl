@@ -1,8 +1,0 @@
-aliceGreen:
-  first: alice
-  second: Green
-  age: 10
-alice:
-  first: alice
-  second: false
-  age: 10

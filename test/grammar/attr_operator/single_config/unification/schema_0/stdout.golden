@@ -1,6 +1,0 @@
-config:
-  main:
-    env:
-    - ENV0: '0'
-      ENV1: '1'
-      ENV2: '2'

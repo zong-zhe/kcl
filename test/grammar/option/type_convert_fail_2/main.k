@@ -1,1 +1,0 @@
-a = option(type="list", default={"key": "value"}, "key1")

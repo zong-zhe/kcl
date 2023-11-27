@@ -1,1 +1,0 @@
-a = "".replace("old")

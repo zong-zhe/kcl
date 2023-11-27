@@ -1,2 +1,0 @@
-schema Name:
-    fullName: str

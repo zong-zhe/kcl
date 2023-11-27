@@ -1,5 +1,0 @@
-config:
-  main:
-    env:
-    - s1
-    - s2

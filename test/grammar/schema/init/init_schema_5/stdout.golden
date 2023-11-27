@@ -1,7 +1,0 @@
-JohnDoe:
-  inner:
-    key: value0
-  innerModel:
-    data:
-      key: value0
-  name: Joe

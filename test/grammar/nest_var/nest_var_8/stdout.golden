@@ -1,6 +1,0 @@
-base:
-  labels:
-    key: value
-person:
-  labels:
-    key: override

@@ -1,7 +1,0 @@
-template:
-  appName: app
-  idc: ''
-  result:
-    env:
-    - name: APPNAME
-      value: app

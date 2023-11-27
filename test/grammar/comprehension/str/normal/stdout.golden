@@ -1,9 +1,0 @@
-dataString: abc
-dataList:
-- a
-- b
-- c
-dataMap:
-  '0': a
-  '1': b
-  '2': c

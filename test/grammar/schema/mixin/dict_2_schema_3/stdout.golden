@@ -1,8 +1,0 @@
-config:
-  metadata:
-    name: config
-  spec:
-    apps:
-    - spec:
-        appName: app
-        appType: type

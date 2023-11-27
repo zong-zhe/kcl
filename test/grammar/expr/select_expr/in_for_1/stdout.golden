@@ -1,4 +1,0 @@
-c:
-- name: main
-  volumeMounts:
-  - {}

@@ -1,4 +1,0 @@
-output:
-  metadata:
-    name: config
-    environment: dev

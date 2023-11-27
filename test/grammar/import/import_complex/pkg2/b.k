@@ -1,2 +1,0 @@
-schema B:
-    b: str

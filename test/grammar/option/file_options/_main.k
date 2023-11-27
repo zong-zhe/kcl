@@ -1,5 +1,0 @@
-a = option("key0")
-b = option("key1")
-c = option("key_number")
-d = option("key_dict")
-e = option("key_list")

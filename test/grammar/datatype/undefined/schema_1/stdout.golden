@@ -1,9 +1,0 @@
-base:
-  id: 1
-  name: null
-  labels:
-    key: value
-sub:
-  name: null
-  labels:
-    key: value

@@ -1,6 +1,0 @@
-person:
-  name:
-    image: null
-    spec:
-    - image: image
-      name: name

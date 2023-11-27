@@ -1,9 +1,0 @@
-config:
-  name: Alice
-  age: 18
-  hc:
-  - 1
-data:
-- 1
-- 2
-- 3

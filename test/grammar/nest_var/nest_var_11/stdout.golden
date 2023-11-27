@@ -1,8 +1,0 @@
-data:
-  metadata:
-    labels:
-      key: 123
-  keyVals:
-    labels:
-      key: 456
-      key2: 789

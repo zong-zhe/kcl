@@ -1,5 +1,0 @@
-isProdEnv: false
-data:
-  env: staging
-  metadata:
-    env: staging

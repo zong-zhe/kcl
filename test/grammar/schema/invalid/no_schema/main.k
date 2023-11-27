@@ -1,3 +1,0 @@
-JohnDoe = Person {
-    "lastName": "Doe"
-}
