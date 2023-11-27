@@ -10,6 +10,7 @@ use crate::settings::must_build_settings;
 
 /// Run the KCL run command.
 pub fn run_command<W: Write>(matches: &ArgMatches, writer: &mut W) -> Result<()> {
+    println!("{:?}", "开始了");
     // Config settings building
     let settings = must_build_settings(matches);
     let output = settings.output();
@@ -44,5 +45,6 @@ pub fn run_command<W: Write>(matches: &ArgMatches, writer: &mut W) -> Result<()>
             sess.0.emit_stashed_diagnostics_and_abort()?;
         }
     }
+    println!("{:?}", "结束了");
     Ok(())
 }
