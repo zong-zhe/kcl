@@ -1,2 +1,0 @@
-schema DeployMixin:
-    name: str

@@ -1,3 +1,0 @@
-node:
-  labels:
-    kubernetes.io/os: linux

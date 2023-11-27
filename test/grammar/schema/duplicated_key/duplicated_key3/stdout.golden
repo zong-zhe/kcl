@@ -1,5 +1,0 @@
-container:
-  cpu: 1
-app:
-  container:
-    cpu: 1

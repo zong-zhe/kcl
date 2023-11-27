@@ -1,9 +1,0 @@
-JonSnow:
-  name:
-    firstName: Jon
-    lastName: Snow
-JohnDoe:
-  name:
-    firstName: John
-    lastName: Doe
-  school: PKU

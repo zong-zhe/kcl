@@ -1,9 +1,0 @@
-alice:
-  name: Alice
-  age: 18
-  hc:
-  - 2
-name: Alice
-age: 18
-hc:
-- 2

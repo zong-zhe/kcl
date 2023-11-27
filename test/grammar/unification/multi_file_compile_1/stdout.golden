@@ -1,7 +1,0 @@
-config:
-  name: config2
-  args:
-  - kcl
-  - main.k
-  labels:
-    key1: value1

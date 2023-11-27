@@ -1,4 +1,0 @@
-
-import main
-
-print('module')

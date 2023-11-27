@@ -1,8 +1,0 @@
-alice:
-  family:
-  - name: bob
-  - name: john
-  name: alice
-  names:
-  - bob
-  - john

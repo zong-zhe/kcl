@@ -1,9 +1,0 @@
-personPkg:
-  name: Alice
-  age: 18
-person:
-  name: Alice
-  age: 18
-  hc: null
-personPkgInstanceCount: 2
-personInstanceCount: 1

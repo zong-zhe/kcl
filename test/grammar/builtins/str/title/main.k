@@ -1,1 +1,0 @@
-a = "hellO worlD".title()

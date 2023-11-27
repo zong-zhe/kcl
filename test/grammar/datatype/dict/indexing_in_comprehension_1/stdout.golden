@@ -1,9 +1,0 @@
-f:
-  family:
-  - name: John
-    relation: father
-result:
-  person:
-    family:
-    - father: John
-      mother: null

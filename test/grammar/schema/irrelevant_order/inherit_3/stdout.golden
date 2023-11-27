@@ -1,4 +1,0 @@
-person:
-  firstName: firstName_override
-  lastName: lastName_override
-  fullName: firstName_override lastName_override

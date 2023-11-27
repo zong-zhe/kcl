@@ -1,7 +1,0 @@
-data:
-  config:
-    replicas: 4
-  replicas: 4
-config:
-  replicas: 4
-replicas: 4

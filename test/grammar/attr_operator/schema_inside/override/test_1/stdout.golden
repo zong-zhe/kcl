@@ -1,4 +1,0 @@
-config:
-  name: config_new
-  args:
-  - kcl

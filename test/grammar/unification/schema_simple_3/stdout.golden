@@ -1,9 +1,0 @@
-config:
-  name: Alice
-  age: 18
-  main:
-    env:
-    - '789'
-    - '456'
-    args:
-    - '1'

@@ -1,2 +1,0 @@
-schema Test:
-    name: str

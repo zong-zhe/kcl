@@ -1,4 +1,0 @@
-srv_0:
-  port: true
-srv_1:
-  port: '8080'

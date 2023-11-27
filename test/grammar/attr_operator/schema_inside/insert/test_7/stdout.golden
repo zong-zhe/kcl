@@ -1,9 +1,0 @@
-data:
-  config:
-    name: config
-    args:
-    - kcl
-    - -d
-    - -p
-    - -o
-    - stdout

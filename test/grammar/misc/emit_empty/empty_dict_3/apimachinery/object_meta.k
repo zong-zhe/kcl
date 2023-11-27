@@ -1,2 +1,0 @@
-schema ObjectMeta:
-    name?: str

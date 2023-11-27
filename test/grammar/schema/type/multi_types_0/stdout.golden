@@ -1,4 +1,0 @@
-srv_0:
-  port: 80
-srv_1:
-  port: http

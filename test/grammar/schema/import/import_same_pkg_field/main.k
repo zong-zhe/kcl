@@ -1,9 +1,0 @@
-import pkg
-
-myPet = pkg.Nameable {
-    "id": 2,
-    "name": {
-        "firstName": "little",
-        "lastName": "cat"
-    }
-}

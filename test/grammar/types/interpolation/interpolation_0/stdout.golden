@@ -1,5 +1,0 @@
-app:
-  name: ngnix
-  containers:
-    ngnix:
-      image: ngnix

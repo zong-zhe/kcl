@@ -1,4 +1,0 @@
-output:
-  metadata:
-    environment: qa
-    name: config
