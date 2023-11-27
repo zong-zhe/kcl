@@ -105,7 +105,7 @@ impl Command {
     ) -> Result<()> {
         let path = self.runtime_lib_path(&lib_path)?;
         cmd.args(libs)
-            .arg(&format!("-Wl,-rpath,{}", &path))
+            .arg(&format!("-Wl,-stack_size,0x80000000,-rpath,{}", &path))
             .arg(&format!("-L{}", &path))
             .arg(&format!("-I{}/include", self.executable_root))
             .arg("-lkclvm_cli_cdylib");
