@@ -75,7 +75,6 @@ pub fn exec_program(sess: Arc<ParseSession>, args: &ExecProgramArgs) -> Result<E
     let opts = args.get_load_program_options();
     let kcl_paths = expand_files(args)?;
     let kcl_paths_str = kcl_paths.iter().map(|s| s.as_str()).collect::<Vec<&str>>();
-    println!("{:?}", "parse 开始了");
     let mut program = load_program(sess.clone(), kcl_paths_str.as_slice(), Some(opts), None)
         .map_err(|err| anyhow!(err))?;
 
@@ -85,7 +84,6 @@ pub fn exec_program(sess: Arc<ParseSession>, args: &ExecProgramArgs) -> Result<E
         &[],
         args.print_override_ast || args.debug > 0,
     )?;
-    println!("{:?}", "execute 开始了");
     let mut result = execute(sess, program, args)?;
     // If it is a empty result, return it directly
     if result.json_result.is_empty() {
@@ -177,7 +175,6 @@ pub fn execute(
         return Ok(ExecProgramResult::default());
     }
     // Resolve ast
-    println!("{:?}", "resolve 开始了");
     let scope = resolve_program(&mut program);
     emit_compile_diag_to_string(sess, &scope, false)?;
 
@@ -190,7 +187,6 @@ pub fn execute(
     let temp_entry_file = temp_file(temp_dir_path)?;
 
     // Generate libs
-    println!("{:?}", "generate lib 开始了");
     let lib_paths = assembler::KclvmAssembler::new(
         program,
         scope,
@@ -201,13 +197,11 @@ pub fn execute(
     .gen_libs()?;
 
     // Link libs into one library
-    println!("{:?}", "lib link 开始了");
     let lib_suffix = Command::get_lib_suffix();
     let temp_out_lib_file = format!("{}{}", temp_entry_file, lib_suffix);
     let lib_path = linker::KclvmLinker::link_all_libs(lib_paths, temp_out_lib_file)?;
 
     // Run the library
-    println!("{:?}", "run link 开始了");
     let runner = KclLibRunner::new(Some(KclLibRunnerOptions {
         plugin_agent_ptr: args.plugin_agent,
     }));
