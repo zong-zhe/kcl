@@ -25,7 +25,7 @@ pub fn rename_symbol_on_file(
     file_paths: &[String],
     new_name: String,
 ) -> Result<Vec<String>> {
-    let changes = rename_symbol(pkg_root, file_paths, symbol_path, new_name)?;
+    let changes = rename_symbol(pkg_root, file_paths, vec![], symbol_path, new_name)?;
     let new_codes = apply_rename_changes(&changes)?;
     let mut changed_paths = vec![];
     for (path, content) in new_codes {
@@ -33,6 +33,29 @@ pub fn rename_symbol_on_file(
         changed_paths.push(path.clone());
     }
     Ok(changed_paths)
+}
+
+/// Service for renaming all the occurrences of the target symbol on the source code.
+/// This API will return the new source code.
+///
+/// pkg_root: the absolute file path to the root package.
+/// symbol_path: path to the symbol. The symbol path should be in the format of: `pkg.sub_pkg:name.sub_name`.
+/// file_paths: list of absolute file paths in which symbols can be renamed.
+/// new_name: the new name of the symbol.
+pub fn rename_symbol_on_code(
+    pkg_root: &str,
+    symbol_path: &str,
+    source_codes: HashMap<String, String>,
+    new_name: String,
+) -> Result<HashMap<String, String>> {
+    let changes = rename_symbol(
+        pkg_root,
+        &source_codes.keys().cloned().collect::<Vec<String>>(),
+        source_codes.values().cloned().collect(),
+        symbol_path,
+        new_name,
+    )?;
+    Ok(apply_rename_changes(&changes)?)
 }
 
 fn apply_rename_changes(changes: &HashMap<Url, Vec<TextEdit>>) -> Result<HashMap<String, String>> {
@@ -137,6 +160,7 @@ fn apply_text_edit(edit: &TextEdit, line: &str) -> String {
 pub fn rename_symbol(
     pkg_root: &str,
     file_paths: &[String],
+    source_code: Vec<String>,
     symbol_path: &str,
     new_name: String,
 ) -> Result<HashMap<Url, Vec<TextEdit>>> {
@@ -147,7 +171,7 @@ pub fn rename_symbol(
     match select_symbol(&symbol_spec) {
         Some((name, range)) => {
             // 3. build word index on file_paths, find refs within file_paths scope
-            let word_index = build_word_index_for_file_paths(file_paths, true)?;
+            let word_index = build_word_index_for_file_paths(file_paths, source_code, true)?;
             if let Some(locations) = word_index.get(&name) {
                 // 4. filter out the matched refs
                 // 4.1 collect matched words(names) and remove Duplicates of the file paths
@@ -444,6 +468,7 @@ mod tests {
                 base_path.to_str().unwrap().to_string(),
                 main_path.to_str().unwrap().to_string(),
             ],
+            vec![],
             "base:Person",
             "NewPerson".to_string(),
         ) {
@@ -465,6 +490,7 @@ mod tests {
                 base_path.to_str().unwrap().to_string(),
                 main_path.to_str().unwrap().to_string(),
             ],
+            vec![],
             "base:Person.name",
             "new_name".to_string(),
         ) {

@@ -597,11 +597,13 @@ impl KclvmServiceImpl {
     /// assert_eq!(result.changed_codes.len(), 1);
     /// ```
     pub fn rename_code(&self, args: &RenameCodeArgs) -> anyhow::Result<RenameCodeResult> {
-        let symbol_path = args.symbol_path.clone();
-        let source_codes = args.source_codes.clone();
-        let new_name = args.new_name.clone();
         Ok(RenameCodeResult {
-            changed_codes: source_codes,
+            changed_codes: rename::rename_symbol_on_code(
+                pkg_root,
+                &args.symbol_path,
+                args.source_codes,
+                args.new_name,
+            ),
         })
     }
 

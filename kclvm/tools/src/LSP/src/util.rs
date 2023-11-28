@@ -730,14 +730,19 @@ pub(crate) fn get_real_path_from_external(
 
 pub(crate) fn build_word_index_for_file_paths(
     paths: &[String],
+    source_text: Vec<String>,
     prune: bool,
 ) -> anyhow::Result<HashMap<String, Vec<Location>>> {
     let mut index: HashMap<String, Vec<Location>> = HashMap::new();
-    for p in paths {
+    for (p_index, p) in paths.iter().enumerate() {
         // str path to url
         if let Ok(url) = Url::from_file_path(p) {
             // read file content and save the word to word index
-            let text = read_file(p)?;
+            let text = if let Some(stext) = source_text.get(p_index) {
+                stext.clone()
+            } else {
+                read_file(p)?
+            };
             for (key, values) in build_word_index_for_file_content(text, &url, prune) {
                 index.entry(key).or_default().extend(values);
             }
@@ -749,10 +754,14 @@ pub(crate) fn build_word_index_for_file_paths(
 /// scan and build a word -> Locations index map
 pub(crate) fn build_word_index(
     path: String,
+    source_text: Vec<String>,
     prune: bool,
 ) -> anyhow::Result<HashMap<String, Vec<Location>>> {
+    if source_text.len() != 0 {
+        return build_word_index_for_file_paths(&[path], source_text, prune);
+    }
     if let Ok(files) = get_kcl_files(path.clone(), true) {
-        return build_word_index_for_file_paths(&files, prune);
+        return build_word_index_for_file_paths(&files, source_text, prune);
     }
     Ok(HashMap::new())
 }
@@ -1071,7 +1080,7 @@ mod tests {
         ]
         .into_iter()
         .collect();
-        match build_word_index(path.to_string(), true) {
+        match build_word_index(path.to_string(), vec![], true) {
             Ok(actual) => {
                 assert_eq!(expect, actual)
             }
