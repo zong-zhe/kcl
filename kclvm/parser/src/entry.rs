@@ -287,9 +287,9 @@ pub fn get_compile_entries_from_paths(
     for (i, s) in file_paths.iter().enumerate() {
         let path = ModRelativePath::from(s.to_string());
 
-        if path.is_dir() && opts.k_code_list.len() > i {
-            return Err("Invalid code list".to_string());
-        }
+        // if path.is_dir() && opts.k_code_list.len() > i {
+        //     return Err("Invalid code list".to_string());
+        // }
 
         // If the path is a [`ModRelativePath`] with preffix '${<package_name>:KCL_MOD}',
         // calculate the real path and the package name.

@@ -17,12 +17,18 @@ use kclvm_ast::ast;
 pub fn parse_symbol_selector_spec(
     pkg_root: &str,
     symbol_path: &str,
+    source_codes: Vec<String>,
 ) -> Result<ast::SymbolSelectorSpec> {
     if let Ok((pkgpath, field_path)) = split_field_path(symbol_path) {
         Ok(ast::SymbolSelectorSpec {
             pkg_root: pkg_root.to_string(),
             pkgpath,
             field_path,
+            source_codes: if source_codes.is_empty() {
+                None
+            } else {
+                Some(source_codes)
+            },
         })
     } else {
         Err(invalid_symbol_selector_spec_error(symbol_path))
@@ -31,7 +37,7 @@ pub fn parse_symbol_selector_spec(
 
 #[test]
 fn test_symbol_path_selector() {
-    let spec = parse_symbol_selector_spec("", "pkg_name:alice.age").unwrap();
+    let spec = parse_symbol_selector_spec("", "pkg_name:alice.age", vec![]).unwrap();
     assert_eq!(spec.pkgpath, "pkg_name".to_string());
     assert_eq!(spec.field_path, "alice.age".to_string());
 }

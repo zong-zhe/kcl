@@ -1,14 +1,18 @@
 use crate::{
     from_lsp::kcl_pos,
     goto_def::find_def_with_gs,
-    util::{build_word_index_for_file_paths, parse_param_and_compile, read_file, Param},
+    util::{build_word_index_for_file_paths, read_file, parse_param_and_compile, Param},
 };
 use anyhow::{anyhow, Result};
-use kclvm_ast::ast;
-use kclvm_error::diagnostic;
+use kclvm_ast::ast::{self, Program};
+use kclvm_driver::lookup_compile_unit;
+use kclvm_error::{diagnostic, Diagnostic};
+use kclvm_parser::{ParseSession, load_program};
 use kclvm_query::selector::parse_symbol_selector_spec;
+use kclvm_sema::{resolver::{scope::ProgramScope, resolve_program_with_opts}, core::global_state::GlobalState, namer::Namer, advanced_resolver::AdvancedResolver};
+use indexmap::IndexSet;
 use lsp_types::{Location, Position, Range, TextEdit, Url};
-use std::collections::{HashMap, HashSet};
+use std::{collections::{HashMap, HashSet}, sync::Arc};
 use std::fs;
 use std::path::PathBuf;
 
@@ -26,7 +30,7 @@ pub fn rename_symbol_on_file(
     new_name: String,
 ) -> Result<Vec<String>> {
     let changes = rename_symbol(pkg_root, file_paths, vec![], symbol_path, new_name)?;
-    let new_codes = apply_rename_changes(&changes)?;
+    let new_codes = apply_rename_changes(&changes, HashMap::new())?;
     let mut changed_paths = vec![];
     for (path, content) in new_codes {
         fs::write(path.clone(), content)?;
@@ -48,25 +52,28 @@ pub fn rename_symbol_on_code(
     source_codes: HashMap<String, String>,
     new_name: String,
 ) -> Result<HashMap<String, String>> {
-    let changes = rename_symbol(
+    let changes: HashMap<Url, Vec<TextEdit>> = rename_symbol(
         pkg_root,
         &source_codes.keys().cloned().collect::<Vec<String>>(),
         source_codes.values().cloned().collect(),
         symbol_path,
         new_name,
     )?;
-    Ok(apply_rename_changes(&changes)?)
+   return apply_rename_changes(&changes, source_codes);
 }
 
-fn apply_rename_changes(changes: &HashMap<Url, Vec<TextEdit>>) -> Result<HashMap<String, String>> {
+fn apply_rename_changes(changes: &HashMap<Url, Vec<TextEdit>>, source_codes: HashMap<String, String>,) -> Result<HashMap<String, String>> {
     let mut result = HashMap::new();
     for (url, edits) in changes {
-        let file_content = read_file(
-            &url.to_file_path()
-                .map_err(|_| anyhow!("Failed to convert URL to file path"))?
-                .display()
-                .to_string(),
-        )?;
+        let file_content = source_codes.get("main.k").unwrap();
+        // if file_content.is_none() {
+        //     file_content = read_file(
+        //         &url.to_file_path()
+        //             .map_err(|_| anyhow!("Failed to convert URL to file path"))?
+        //             .display()
+        //             .to_string(),
+        //     )?;
+        // }
 
         let file_content_lines: Vec<&str> = file_content.lines().collect();
         let mut updated_lines: Vec<String> = file_content_lines
@@ -129,11 +136,15 @@ fn apply_rename_changes(changes: &HashMap<Url, Vec<TextEdit>>) -> Result<HashMap
             .collect();
 
         let new_file_content = retained_lines.join("\n");
+        // result.insert(
+        //     url.to_file_path()
+        //         .map_err(|_| anyhow!("Failed to convert URL to file path"))?
+        //         .display()
+        //         .to_string(),
+        //     new_file_content,
+        // );
         result.insert(
-            url.to_file_path()
-                .map_err(|_| anyhow!("Failed to convert URL to file path"))?
-                .display()
-                .to_string(),
+            "main.k".to_string(),
             new_file_content,
         );
     }
@@ -160,18 +171,18 @@ fn apply_text_edit(edit: &TextEdit, line: &str) -> String {
 pub fn rename_symbol(
     pkg_root: &str,
     file_paths: &[String],
-    source_code: Vec<String>,
+    source_codes: Vec<String>,
     symbol_path: &str,
     new_name: String,
 ) -> Result<HashMap<Url, Vec<TextEdit>>> {
     // 1. from symbol path to the symbol
-    let symbol_spec = parse_symbol_selector_spec(pkg_root, symbol_path)?;
+    let symbol_spec = parse_symbol_selector_spec(pkg_root, symbol_path, source_codes.clone())?;
     // 2. get the symbol name and definition range from symbol path
 
     match select_symbol(&symbol_spec) {
         Some((name, range)) => {
             // 3. build word index on file_paths, find refs within file_paths scope
-            let word_index = build_word_index_for_file_paths(file_paths, source_code, true)?;
+            let word_index = build_word_index_for_file_paths(file_paths, source_codes.clone(), true)?;
             if let Some(locations) = word_index.get(&name) {
                 // 4. filter out the matched refs
                 // 4.1 collect matched words(names) and remove Duplicates of the file paths
@@ -190,7 +201,7 @@ pub fn rename_symbol(
                         if let Ok(p) = loc.uri.to_file_path() {
                             match p.canonicalize() {
                                 Ok(path) => {
-                                    let p = path.display().to_string();
+                                    let p: String = path.display().to_string();
                                     if let Ok((_, _, _, gs)) = parse_param_and_compile(
                                         Param {
                                             file: p.to_string(),
@@ -213,6 +224,23 @@ pub fn rename_symbol(
                                 }
                                 Err(_) => {
                                     return false;
+                                }
+                            }
+                        } else {
+                            // let p = loc.uri.path();
+                            if let Ok((_, _, _, gs)) = parse_and_compile(
+                                "main.k".to_string(),
+                                source_codes.clone(),
+                            ) {
+                                let kcl_pos = kcl_pos("main.k", loc.range.start);
+                                if let Some(symbol_ref) =
+                                    find_def_with_gs(&kcl_pos, &gs, true)
+                                {
+                                    if let Some(symbol_def) =
+                                        gs.get_symbols().get_symbol(symbol_ref)
+                                    {
+                                        return symbol_def.get_range() == range;
+                                    }
                                 }
                             }
                         }
@@ -257,13 +285,15 @@ pub fn select_symbol(selector: &ast::SymbolSelectorSpec) -> Option<(String, diag
     let fields: Vec<&str> = selector.field_path.split(".").collect();
     match pkg.as_path().to_str() {
         Some(pkgpath) => {
+            let pkgpath = if selector.source_codes.is_some(){
+                "main.k"
+            } else {
+                pkgpath
+            };
             // resolve pkgpath and get the symbol data by the fully qualified name
-            if let Ok((prog, _, _, gs)) = parse_param_and_compile(
-                Param {
-                    file: pkgpath.to_string(),
-                    module_cache: None,
-                },
-                None,
+            if let Ok((prog, _, _, gs)) = parse_and_compile(
+                pkgpath.to_string(),
+                selector.source_codes.clone().unwrap_or_default(),
             ) {
                 if let Some(symbol_ref) = gs
                     .get_symbols()
@@ -288,6 +318,89 @@ pub fn select_symbol(selector: &ast::SymbolSelectorSpec) -> Option<(String, diag
         None => None,
     }
 }
+
+pub fn select_symbol_from_code(selector: &ast::SymbolSelectorSpec, files: Vec<String>, codes: Vec<String>) -> Option<(String, diagnostic::Range)> {
+    let mut pkg = PathBuf::from(&selector.pkg_root);
+    let pkg_names = selector.pkgpath.split(".");
+    for n in pkg_names {
+        pkg = pkg.join(n)
+    }
+
+    let fields: Vec<&str> = selector.field_path.split(".").collect();
+    match pkg.as_path().to_str() {
+        Some(pkgpath) => {
+            // resolve pkgpath and get the symbol data by the fully qualified name
+            if let Ok((prog, _, _, gs)) = parse_and_compile(
+                pkgpath.to_string(),
+                selector.source_codes.clone().unwrap_or_default(),
+            ) {
+                if let Some(symbol_ref) = gs
+                    .get_symbols()
+                    .get_symbol_by_fully_qualified_name(&prog.main)
+                {
+                    let mut owner_ref = symbol_ref;
+                    let mut target = None;
+                    for field in fields {
+                        let owner = gs.get_symbols().get_symbol(owner_ref).unwrap();
+                        target = owner.get_attribute(field, gs.get_symbols(), None);
+                        if let Some(target) = target {
+                            owner_ref = target;
+                        }
+                    }
+
+                    let target_symbol = gs.get_symbols().get_symbol(target?)?;
+                    return Some((target_symbol.get_name(), target_symbol.get_range().clone()));
+                }
+            }
+            None
+        }
+        None => None,
+    }
+}
+
+pub(crate) fn parse_and_compile(
+    package_path: String,
+    code_list: Vec<String>
+) -> anyhow::Result<(Program, ProgramScope, IndexSet<Diagnostic>, GlobalState)> {
+    let (files, opt) = lookup_compile_unit(&package_path, true);
+
+    let files: Vec<String> = if code_list.len() > 0 {
+        files.iter().map(|s| PathBuf::from(s).display().to_string()).collect()
+    } else {
+        files
+    };
+
+    let files: Vec<&str> = files.iter().map(|s| s.as_str()).collect();
+    
+    let mut opt = opt.unwrap_or_default();
+    opt.load_plugins = true;
+
+    // update opt.k_code_list
+    opt.k_code_list.append(&mut code_list.clone());
+    let sess = Arc::new(ParseSession::default());
+    let mut program = load_program(sess.clone(), &files, Some(opt), None)
+        .map_err(|err| anyhow::anyhow!("Compile failed: {}", err))?;
+
+    let prog_scope = resolve_program_with_opts(
+        &mut program,
+        kclvm_sema::resolver::Options {
+            merge_program: false,
+            type_alise: false,
+            ..Default::default()
+        },
+        None,
+    );
+
+    let gs = GlobalState::default();
+    let gs = Namer::find_symbols(&program, gs);
+    let node_ty_map = prog_scope.node_ty_map.clone();
+    let global_state = AdvancedResolver::resolve_program(&program, gs, node_ty_map);
+
+    sess.append_diagnostic(prog_scope.handler.diagnostics.clone());
+    let diags = sess.1.borrow().diagnostics.clone();
+    Ok((program, prog_scope, diags, global_state))
+}
+
 #[cfg(test)]
 mod tests {
     use kclvm_ast::ast;
@@ -314,6 +427,7 @@ mod tests {
             pkg_root: pkg_root.clone(),
             pkgpath: "base".to_string(),
             field_path: "Person.name".to_string(),
+            source_codes: None,
         }) {
             assert_eq!(name, "name");
             assert_eq!(
@@ -339,6 +453,7 @@ mod tests {
             pkg_root: pkg_root.clone(),
             pkgpath: "base".to_string(),
             field_path: "Name.first".to_string(),
+            source_codes: None,
         }) {
             assert_eq!(name, "first");
             assert_eq!(
@@ -364,6 +479,7 @@ mod tests {
             pkg_root: pkg_root.clone(),
             pkgpath: "base".to_string(),
             field_path: "Person".to_string(),
+            source_codes: None,
         }) {
             assert_eq!(name, "Person");
             assert_eq!(
@@ -389,6 +505,7 @@ mod tests {
             pkg_root: pkg_root.clone(),
             pkgpath: "base".to_string(),
             field_path: "a".to_string(),
+            source_codes: None,
         }) {
             assert_eq!(name, "a");
             assert_eq!(
@@ -414,6 +531,7 @@ mod tests {
             pkg_root: pkg_root.clone(),
             pkgpath: "".to_string(),
             field_path: "Server.name".to_string(),
+            source_codes: None,
         }) {
             assert_eq!(name, "name");
             assert_eq!(
@@ -445,6 +563,7 @@ mod tests {
             pkg_root: root.to_str().unwrap().to_string(),
             pkgpath: "base".to_string(),
             field_path: "name".to_string(),
+            source_codes: None,
         });
         assert!(result.is_none(), "should not find the target symbol")
     }
@@ -581,7 +700,7 @@ mod tests {
         ];
 
         for test_case in test_cases {
-            let result = apply_rename_changes(&test_case.changes);
+            let result = apply_rename_changes(&test_case.changes, HashMap::new());
             assert_eq!(result.unwrap().get(&path).unwrap(), &test_case.expected);
         }
     }

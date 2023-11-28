@@ -746,6 +746,12 @@ pub(crate) fn build_word_index_for_file_paths(
             for (key, values) in build_word_index_for_file_content(text, &url, prune) {
                 index.entry(key).or_default().extend(values);
             }
+        } else {
+            if let Some(stext) = source_text.get(p_index) {
+                for (key, values) in build_word_index_for_file_content(stext.to_string(), &Url::parse(&format!("file://{}", p)).unwrap(), prune) {
+                    index.entry(key).or_default().extend(values);
+                }
+            }
         }
     }
     Ok(index)

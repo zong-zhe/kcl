@@ -310,6 +310,7 @@ pub struct SymbolSelectorSpec {
     pub pkg_root: String,
     pub pkgpath: String,
     pub field_path: String,
+    pub source_codes: Option<Vec<String>>,
 }
 
 /// Program is the AST collection of all files of the running KCL program.

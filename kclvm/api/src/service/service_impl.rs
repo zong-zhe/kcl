@@ -597,13 +597,17 @@ impl KclvmServiceImpl {
     /// assert_eq!(result.changed_codes.len(), 1);
     /// ```
     pub fn rename_code(&self, args: &RenameCodeArgs) -> anyhow::Result<RenameCodeResult> {
+        let pkg_root = PathBuf::from(args.package_root.clone())
+            .canonicalize()?
+            .display()
+            .to_string();
         Ok(RenameCodeResult {
             changed_codes: rename::rename_symbol_on_code(
-                pkg_root,
+                &pkg_root,
                 &args.symbol_path,
-                args.source_codes,
-                args.new_name,
-            ),
+                args.source_codes.clone(),
+                args.new_name.clone(),
+            )?,
         })
     }
 
@@ -660,4 +664,19 @@ impl KclvmServiceImpl {
         }
         Ok(result)
     }
+}
+
+#[test]
+fn test_xxx() {
+    use maplit::hashmap;
+    let serv = KclvmServiceImpl::default();
+    let result = serv
+        .rename_code(&RenameCodeArgs {
+            package_root: "/Users/zongz/Workspace/kusionstack/amyxia/kcl/kclvm/api/src/testdata/rename".to_string(),
+            symbol_path: "a".to_string(),
+            source_codes: hashmap!{"main.k".to_string() => "a = 1\nb = a".to_string()},
+            new_name: "a2".to_string(),
+        })
+        .unwrap();
+    assert_eq!(result.changed_codes.len(), 1);
 }
