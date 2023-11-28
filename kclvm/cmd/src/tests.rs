@@ -635,7 +635,8 @@ fn test_keyword_argument_error_message() {
 
 #[test]
 fn test_xxx() {
-    let test_case_path = PathBuf::from("/Users/zongz/Workspace/learn/kcl_learn/debug/str_attr_0/main.k");
+    let test_case_path =
+        PathBuf::from("/Users/zongz/Workspace/learn/kcl_learn/debug/str_attr_0/main.k");
     let matches = app().arg_required_else_help(true).get_matches_from(&[
         ROOT_CMD,
         "run",
@@ -649,7 +650,7 @@ fn test_xxx() {
     {
         Ok(res) => println!("{:?}", res),
         Err(msg) => {
-           println!("{:?}", msg);
+            println!("{:?}", msg);
         }
     }
 }
