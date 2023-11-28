@@ -44,6 +44,5 @@ pub fn run_command<W: Write>(matches: &ArgMatches, writer: &mut W) -> Result<()>
             sess.0.emit_stashed_diagnostics_and_abort()?;
         }
     }
-    println!("{:?}", "结束了");
     Ok(())
 }
