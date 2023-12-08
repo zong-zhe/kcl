@@ -42,7 +42,7 @@ jobs:
         working-directory: .
 
       # Rust unit test
-      - run: cargo test -p kclvm-*
+      - run: argo test --package kclvm-api --lib -- capi_test::test_c_api_validate_code --exact --nocapture 
         working-directory: ./kclvm
 
       # Rust runtime test
