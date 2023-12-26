@@ -154,7 +154,7 @@ fn parse_files_with_vfs(
         let vfs = &vfs.read();
         for file in &file_paths {
             println!("parse_files_with_vfs {:?}", file);
-            match vfs.file_id(&VfsPath::new_virtual_path(file.clone())) {
+            match vfs.file_id(&VfsPath::new_real_path(file.clone())) {
                 Some(id) => {
                     // Load code from vfs
                     list.push(String::from_utf8(vfs.file_contents(id).to_vec()).unwrap());
