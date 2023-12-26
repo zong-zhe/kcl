@@ -36,7 +36,7 @@ pub fn rename_symbol_on_file(
         let content = fs::read_to_string(path.clone())?;
         println!("rename_symbol_on_file : {:?}", path.to_string());
         vfs.write().set_file_contents(
-            VfsPath::new_virtual_path(path.to_string()),
+            VfsPath::new_real_path(path.to_string()),
             Some(content.clone().into_bytes()),
         );
         source_codes.insert(path.to_string(), content.clone());
