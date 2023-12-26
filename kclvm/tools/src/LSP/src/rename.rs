@@ -163,7 +163,7 @@ fn parse_files_with_vfs(
     };
 
     let files: Vec<&str> = file_paths.iter().map(|s| s.as_str()).collect();
-    let sess = Arc::new(ParseSession::default());
+    let sess: Arc<ParseSession> = Arc::new(ParseSession::default());
     let mut program = load_program(sess.clone(), &files, Some(opt), None)
         .map_err(|err| anyhow::anyhow!("Compile failed: {}", err))?;
 
