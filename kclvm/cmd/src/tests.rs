@@ -650,7 +650,7 @@ fn test_xxx() {
     {
         Ok(res) => {
             println!("{:?}", res)
-        },
+        }
         Err(msg) => {
             println!("{:?}", msg)
         }
