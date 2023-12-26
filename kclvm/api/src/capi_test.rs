@@ -155,12 +155,6 @@ fn test_c_api_call_exec_program_with_recursive() {
 }
 
 #[test]
-fn test_vfspath() {
-    use ra_ap_vfs::VfsPath;
-    VfsPath::new_real_path("/mock/path/main.k".to_string());
-}
-
-#[test]
 fn test_c_api_validate_code() {
     test_c_api_without_wrapper::<ValidateCodeArgs, ValidateCodeResult>(
         "KclvmService.ValidateCode",

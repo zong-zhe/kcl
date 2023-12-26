@@ -34,14 +34,13 @@ pub fn rename_symbol_on_file(
     let mut source_codes = HashMap::<String, String>::new();
     for path in file_paths {
         let content = fs::read_to_string(path.clone())?;
-        println!("rename_symbol_on_file : {:?}", path.to_string());
         vfs.write().set_file_contents(
             VfsPath::new_real_path(path.to_string()),
             Some(content.clone().into_bytes()),
         );
         source_codes.insert(path.to_string(), content.clone());
     }
-    let changes = rename_symbol(pkg_root, vfs, symbol_path, new_name)?;
+    let changes = rename_symbol(pkg_root, vfs, symbol_path, new_name, VfsPath::new_real_path)?;
     let new_codes = apply_rename_changes(&changes, source_codes)?;
     let mut changed_paths = vec![];
     for (path, content) in new_codes.iter() {
@@ -60,14 +59,13 @@ pub fn rename_symbol_on_code(
     // prepare a vfs from given file_paths
     let vfs: Arc<RwLock<Vfs>> = Arc::new(RwLock::new(Default::default()));
     for (filepath, code) in &source_codes {
-        println!("rename_symbol_on_code {:?}", filepath);
         vfs.write().set_file_contents(
             VfsPath::new_virtual_path(filepath.clone()),
             Some(code.as_bytes().to_vec()),
         );
     }
     let changes: HashMap<String, Vec<TextEdit>> =
-        rename_symbol(pkg_root, vfs, symbol_path, new_name)?;
+        rename_symbol(pkg_root, vfs, symbol_path, new_name, VfsPath::new_virtual_path)?;
     return apply_rename_changes(&changes, source_codes);
 }
 
@@ -104,10 +102,14 @@ fn package_path_to_file_path(pkg_path: &str, vfs: Arc<RwLock<Vfs>>) -> Vec<Strin
 /// Select a symbol by the symbol path
 /// The symbol path should be in the format of: `pkg.sub_pkg:name.sub_name`
 /// returns the symbol name and definition range
-fn select_symbol(
+fn select_symbol<F>(
     symbol_spec: &ast::SymbolSelectorSpec,
     vfs: Arc<RwLock<Vfs>>,
-) -> Option<(String, diagnostic::Range)> {
+    trans_vfs_path: F
+) -> Option<(String, diagnostic::Range)> 
+where
+    F: Fn(String) -> VfsPath,
+{
     let mut pkg = PathBuf::from(&symbol_spec.pkg_root);
     let fields: Vec<&str> = symbol_spec.field_path.split(".").collect();
     if !symbol_spec.pkgpath.is_empty() {
@@ -120,7 +122,7 @@ fn select_symbol(
 
     let file_paths = package_path_to_file_path(pkg_path, vfs.clone());
 
-    if let Ok((prog, gs)) = parse_files_with_vfs(pkg_path.to_string(), file_paths, vfs.clone()) {
+    if let Ok((prog, gs)) = parse_files_with_vfs(pkg_path.to_string(), file_paths, vfs.clone(), trans_vfs_path) {
         if let Some(symbol_ref) = gs
             .get_symbols()
             .get_symbol_by_fully_qualified_name(&prog.main)
@@ -141,11 +143,15 @@ fn select_symbol(
     None
 }
 
-fn parse_files_with_vfs(
+fn parse_files_with_vfs<F>(
     work_dir: String,
     file_paths: Vec<String>,
     vfs: Arc<RwLock<Vfs>>,
-) -> anyhow::Result<(Program, GlobalState)> {
+    trans_vfs_path: F
+) -> anyhow::Result<(Program, GlobalState)> 
+where
+    F: Fn(String) -> VfsPath,
+{
     let mut opt = LoadProgramOptions::default();
     opt.work_dir = work_dir;
     opt.load_plugins = true;
@@ -153,10 +159,7 @@ fn parse_files_with_vfs(
         let mut list = vec![];
         let vfs = &vfs.read();
         for file in &file_paths {
-            #[cfg(target_os = "windows")]
-            let file = format!("/{}", file);
-            println!("parse_files_with_vfs {:?}", file);
-            match vfs.file_id(&VfsPath::new_virtual_path(file.clone())) {
+            match vfs.file_id(&trans_vfs_path(file.clone())) {
                 Some(id) => {
                     // Load code from vfs
                     list.push(String::from_utf8(vfs.file_contents(id).to_vec()).unwrap());
@@ -301,16 +304,20 @@ pub fn match_pkgpath_and_code(
 /// vfs: contains all the files and contents to be renamed
 /// symbol_path: path to the symbol. The symbol path should be in the format of: `pkg.sub_pkg:name.sub_name`
 /// new_name: the new name of the symbol
-pub fn rename_symbol(
+pub fn rename_symbol<F>(
     pkg_root: &str,
     vfs: Arc<RwLock<Vfs>>,
     symbol_path: &str,
     new_name: String,
-) -> Result<HashMap<String, Vec<TextEdit>>> {
+    trans_vfs_path: F,
+) -> Result<HashMap<String, Vec<TextEdit>>> 
+where
+    F: Fn(String) -> VfsPath,
+{
     // 1. from symbol path to the symbol
     let symbol_spec = parse_symbol_selector_spec(pkg_root, symbol_path)?;
     // 2. get the symbol name and definition range from symbol path
-    match select_symbol(&symbol_spec, vfs.clone()) {
+    match select_symbol(&symbol_spec, vfs.clone(), &trans_vfs_path) {
         Some((name, range)) => {
             // 3. build word index, find refs within given scope
             // vfs to source code contents
@@ -339,6 +346,7 @@ pub fn rename_symbol(
                         pkg_root.to_string(),
                         vec![fp.to_string()],
                         vfs.clone(),
+                        &trans_vfs_path
                     ) {
                         for loc in locs {
                             let kcl_pos = kcl_pos(fp, loc.range.start);
@@ -497,6 +505,7 @@ e = a["abc"]
                 field_path: "Person.name".to_string(),
             },
             vfs.clone(),
+            VfsPath::new_virtual_path,
         ) {
             assert_eq!(name, "name");
             assert_eq!(
@@ -525,6 +534,7 @@ e = a["abc"]
                 field_path: "Name.first".to_string(),
             },
             vfs.clone(),
+            VfsPath::new_virtual_path,
         ) {
             assert_eq!(name, "first");
             assert_eq!(
@@ -553,6 +563,7 @@ e = a["abc"]
                 field_path: "Person".to_string(),
             },
             vfs.clone(),
+            VfsPath::new_virtual_path,
         ) {
             assert_eq!(name, "Person");
             assert_eq!(
@@ -581,6 +592,7 @@ e = a["abc"]
                 field_path: "a".to_string(),
             },
             vfs.clone(),
+            VfsPath::new_virtual_path,
         ) {
             assert_eq!(name, "a");
             assert_eq!(
@@ -609,6 +621,7 @@ e = a["abc"]
                 field_path: "Server.name".to_string(),
             },
             vfs.clone(),
+            VfsPath::new_virtual_path,
         ) {
             assert_eq!(name, "name");
             assert_eq!(
@@ -642,6 +655,7 @@ e = a["abc"]
                 field_path: "name".to_string(),
             },
             vfs.clone(),
+            VfsPath::new_virtual_path,
         );
         assert!(result.is_none(), "should not find the target symbol")
     }
@@ -673,6 +687,7 @@ e = a["abc"]
             vfs.clone(),
             "base:Person",
             "NewPerson".to_string(),
+            VfsPath::new_virtual_path,
         ) {
             assert_eq!(changes.len(), 2);
             assert!(changes.contains_key(base_path));
@@ -691,6 +706,7 @@ e = a["abc"]
             vfs.clone(),
             "base:Person.name",
             "new_name".to_string(),
+            VfsPath::new_virtual_path,
         ) {
             assert_eq!(changes.len(), 2);
             assert!(changes.contains_key(base_path));
