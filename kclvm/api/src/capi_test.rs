@@ -2,6 +2,7 @@ use crate::gpyrpc::*;
 use crate::service::capi::*;
 use once_cell::sync::Lazy;
 use prost::Message;
+use ra_ap_vfs::Vfs;
 use serde::de::DeserializeOwned;
 use std::default::Default;
 use std::ffi::{CStr, CString};
@@ -151,6 +152,12 @@ fn test_c_api_call_exec_program_with_recursive() {
         "exec-program-with-recursive.response.json",
         |_| {},
     );
+}
+
+#[test]
+fn test_vfspath() {
+    use ra_ap_vfs::VfsPath;
+    VfsPath::new_real_path("/mock/path/main.k".to_string());
 }
 
 #[test]
