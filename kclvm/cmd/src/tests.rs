@@ -633,6 +633,7 @@ fn test_keyword_argument_error_message() {
     }
 }
 
+#[test]
 fn test_xxx() {
     use kclvm_runner::{exec_program, ExecProgramArgs};
     let matches = app().arg_required_else_help(true).get_matches_from(&[

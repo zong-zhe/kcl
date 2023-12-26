@@ -34,6 +34,7 @@ pub fn rename_symbol_on_file(
     let mut source_codes = HashMap::<String, String>::new();
     for path in file_paths {
         let content = fs::read_to_string(path.clone())?;
+        println!("rename_symbol_on_file : {:?}", path.to_string());
         vfs.write().set_file_contents(
             VfsPath::new_virtual_path(path.to_string()),
             Some(content.clone().into_bytes()),
@@ -59,6 +60,7 @@ pub fn rename_symbol_on_code(
     // prepare a vfs from given file_paths
     let vfs: Arc<RwLock<Vfs>> = Arc::new(RwLock::new(Default::default()));
     for (filepath, code) in &source_codes {
+        println!("rename_symbol_on_code {:?}", filepath);
         vfs.write().set_file_contents(
             VfsPath::new_virtual_path(filepath.clone()),
             Some(code.as_bytes().to_vec()),
@@ -151,6 +153,7 @@ fn parse_files_with_vfs(
         let mut list = vec![];
         let vfs = &vfs.read();
         for file in &file_paths {
+            println!("parse_files_with_vfs {:?}", file);
             match vfs.file_id(&VfsPath::new_virtual_path(file.clone())) {
                 Some(id) => {
                     // Load code from vfs
