@@ -64,8 +64,13 @@ pub fn rename_symbol_on_code(
             Some(code.as_bytes().to_vec()),
         );
     }
-    let changes: HashMap<String, Vec<TextEdit>> =
-        rename_symbol(pkg_root, vfs, symbol_path, new_name, VfsPath::new_virtual_path)?;
+    let changes: HashMap<String, Vec<TextEdit>> = rename_symbol(
+        pkg_root,
+        vfs,
+        symbol_path,
+        new_name,
+        VfsPath::new_virtual_path,
+    )?;
     return apply_rename_changes(&changes, source_codes);
 }
 
@@ -105,8 +110,8 @@ fn package_path_to_file_path(pkg_path: &str, vfs: Arc<RwLock<Vfs>>) -> Vec<Strin
 fn select_symbol<F>(
     symbol_spec: &ast::SymbolSelectorSpec,
     vfs: Arc<RwLock<Vfs>>,
-    trans_vfs_path: F
-) -> Option<(String, diagnostic::Range)> 
+    trans_vfs_path: F,
+) -> Option<(String, diagnostic::Range)>
 where
     F: Fn(String) -> VfsPath,
 {
@@ -122,7 +127,12 @@ where
 
     let file_paths = package_path_to_file_path(pkg_path, vfs.clone());
 
-    if let Ok((prog, gs)) = parse_files_with_vfs(pkg_path.to_string(), file_paths, vfs.clone(), trans_vfs_path) {
+    if let Ok((prog, gs)) = parse_files_with_vfs(
+        pkg_path.to_string(),
+        file_paths,
+        vfs.clone(),
+        trans_vfs_path,
+    ) {
         if let Some(symbol_ref) = gs
             .get_symbols()
             .get_symbol_by_fully_qualified_name(&prog.main)
@@ -147,8 +157,8 @@ fn parse_files_with_vfs<F>(
     work_dir: String,
     file_paths: Vec<String>,
     vfs: Arc<RwLock<Vfs>>,
-    trans_vfs_path: F
-) -> anyhow::Result<(Program, GlobalState)> 
+    trans_vfs_path: F,
+) -> anyhow::Result<(Program, GlobalState)>
 where
     F: Fn(String) -> VfsPath,
 {
@@ -310,7 +320,7 @@ pub fn rename_symbol<F>(
     symbol_path: &str,
     new_name: String,
     trans_vfs_path: F,
-) -> Result<HashMap<String, Vec<TextEdit>>> 
+) -> Result<HashMap<String, Vec<TextEdit>>>
 where
     F: Fn(String) -> VfsPath,
 {
@@ -346,7 +356,7 @@ where
                         pkg_root.to_string(),
                         vec![fp.to_string()],
                         vfs.clone(),
-                        &trans_vfs_path
+                        &trans_vfs_path,
                     ) {
                         for loc in locs {
                             let kcl_pos = kcl_pos(fp, loc.range.start);
