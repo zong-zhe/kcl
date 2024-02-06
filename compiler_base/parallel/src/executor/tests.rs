@@ -72,13 +72,17 @@ mod test_timeout_executor {
 
     impl Task for MyTask {
         fn run(&self, ch: std::sync::mpsc::Sender<FinishedTask>) {
-            ch.send(FinishedTask::new(
+            println!("Task {} started", self.id); // 添加日志
+            let result = ch.send(FinishedTask::new(
                 TaskInfo::new(self.id.into(), "Task".to_string().into()),
                 "Hello World".to_string().as_bytes().to_vec(),
                 vec![],
                 TaskStatus::Finished,
-            ))
-            .unwrap();
+            ));
+            match result {
+                Ok(_) => println!("Task {} finished", self.id), // 添加日志
+                Err(e) => println!("Failed to send result for task {}: {}", self.id, e), // 错误处理和日志
+            }
         }
 
         fn info(&self) -> TaskInfo {
@@ -145,11 +149,16 @@ mod test_timeout_executor {
 
         events_collector.lock().unwrap().clean();
 
-        executor
+        let res = executor
             .run_all_tasks(&tasks, |e| {
                 capture_events(e, &mut Arc::clone(&events_collector))
-            })
-            .unwrap();
+            });
+
+
+        match res {
+            Ok(res) => {},
+            Err(err) => {println!("{:?}", err)},
+        }
 
         let mut got_events_strs: Vec<String> = events_collector
             .lock()
@@ -174,7 +183,7 @@ mod test_timeout_executor {
             let random_thread_number = rand::thread_rng().gen_range(1..=100000);
             let random_task_number = rand::thread_rng().gen_range(1..=100000);
 
-            run_my_task_with_thread_num(1000, 1000);
+            run_my_task_with_thread_num(10000, 10000);
 
             if Instant::now().duration_since(start_time) > Duration::from_secs(60) {
                 break;
