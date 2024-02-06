@@ -149,15 +149,15 @@ mod test_timeout_executor {
 
         events_collector.lock().unwrap().clean();
 
-        let res = executor
-            .run_all_tasks(&tasks, |e| {
-                capture_events(e, &mut Arc::clone(&events_collector))
-            });
-
+        let res = executor.run_all_tasks(&tasks, |e| {
+            capture_events(e, &mut Arc::clone(&events_collector))
+        });
 
         match res {
-            Ok(res) => {},
-            Err(err) => {println!("{:?}", err)},
+            Ok(res) => {}
+            Err(err) => {
+                println!("{:?}", err)
+            }
         }
 
         let mut got_events_strs: Vec<String> = events_collector
