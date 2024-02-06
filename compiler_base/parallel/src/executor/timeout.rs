@@ -25,7 +25,7 @@ pub(crate) struct TimeoutSituation {
 pub struct TimeoutExecutor {
     timeout_queue: VecDeque<TimeoutSituation>,
     capacity: usize,
-    timeout: Option<Instant>
+    timeout: Option<Instant>,
 }
 
 impl TimeoutExecutor {
@@ -38,7 +38,7 @@ impl TimeoutExecutor {
         TimeoutExecutor {
             timeout_queue: VecDeque::default(),
             capacity: thread_count,
-            timeout: Some(default_deadline_60_seconds())
+            timeout: Some(default_deadline_60_seconds()),
         }
     }
 
@@ -51,7 +51,7 @@ impl TimeoutExecutor {
         TimeoutExecutor {
             timeout_queue: VecDeque::default(),
             capacity: thread_count,
-            timeout: Some(timeout)
+            timeout: Some(timeout),
         }
     }
 

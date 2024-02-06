@@ -128,7 +128,10 @@ mod test_timeout_executor {
             tasks.push(MyTask { id: i })
         }
 
-        let executor = TimeoutExecutor::new_with_thread_count_and_timeout(thread_count, Instant::now() + Duration::from_secs(6000));
+        let executor = TimeoutExecutor::new_with_thread_count_and_timeout(
+            thread_count,
+            Instant::now() + Duration::from_secs(120),
+        );
 
         let mut events_collector = Arc::new(Mutex::new(EventsCollector::default()));
 
