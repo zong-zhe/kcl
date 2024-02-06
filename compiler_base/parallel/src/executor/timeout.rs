@@ -132,6 +132,11 @@ impl Executor for TimeoutExecutor {
                     if res.is_ok() {
                         break;
                     };
+                    if res.is_err() {
+                        if res.err().unwrap() == RecvTimeoutError::Timeout {
+                            println!("timeout");
+                        }
+                    }
                 } else {
                     res = rx.recv().map_err(|_| RecvTimeoutError::Disconnected);
                     break;
