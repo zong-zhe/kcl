@@ -183,7 +183,7 @@ mod test_timeout_executor {
             let random_thread_number = rand::thread_rng().gen_range(1..=100000);
             let random_task_number = rand::thread_rng().gen_range(1..=100000);
 
-            run_my_task_with_thread_num(100000, 100000);
+            run_my_task_with_thread_num(random_task_number, random_thread_number);
 
             if Instant::now().duration_since(start_time) > Duration::from_secs(60) {
                 break;
