@@ -1554,7 +1554,7 @@ register_collection_member! {
 // ------------------------------
 
 pub const FILE: &str = "file";
-pub const FILE_FUNCTION_NAMES: &[&str] = &["read"];
+pub const FILE_FUNCTION_NAMES: &[&str] = &["read", "abs"];
 macro_rules! register_file_member {
     ($($name:ident => $ty:expr)*) => (
         pub const FILE_FUNCTION_TYPES: Lazy<IndexMap<String, Type>> = Lazy::new(|| {
@@ -1576,6 +1576,20 @@ register_file_member! {
             },
         ],
         r#"Read the file content from path"#,
+        false,
+        None,
+    )
+    abs => Type::function(
+        None,
+        Type::str_ref(),
+        &[
+            Parameter {
+                name: "filepath".to_string(),
+                ty: Type::str_ref(),
+                has_default: false,
+            },
+        ],
+        r#"Converts the file path to an absolute path"#,
         false,
         None,
     )
