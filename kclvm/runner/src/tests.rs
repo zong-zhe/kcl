@@ -221,6 +221,7 @@ fn gen_assembler(entry_file: &str, test_kcl_case_path: &str) -> KclvmAssembler {
         entry_file.to_string(),
         KclvmLibAssembler::LLVM,
         HashMap::new(),
+        None
     )
 }
 
@@ -399,6 +400,7 @@ fn test_clean_path_for_genlibs() {
         String::new(),
         KclvmLibAssembler::LLVM,
         HashMap::new(),
+        None
     );
 
     let temp_dir = tempdir().unwrap();

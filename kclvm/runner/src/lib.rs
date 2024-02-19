@@ -214,6 +214,7 @@ pub fn execute(
         temp_entry_file.clone(),
         KclvmLibAssembler::LLVM,
         args.get_package_maps_from_external_pkg(),
+        args.work_dir.clone()
     )
     .gen_libs()?;
 
@@ -287,6 +288,7 @@ pub fn build_program<P: AsRef<Path>>(
         temp_entry_file.clone(),
         KclvmLibAssembler::LLVM,
         args.get_package_maps_from_external_pkg(),
+        args.work_dir.clone()
     )
     .gen_libs()?;
 

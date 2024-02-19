@@ -196,6 +196,7 @@ pub(crate) struct KclvmAssembler {
     single_file_assembler: KclvmLibAssembler,
     target: String,
     external_pkgs: HashMap<String, String>,
+    mod_path: Option<String>,
 }
 
 impl KclvmAssembler {
@@ -208,6 +209,7 @@ impl KclvmAssembler {
         entry_file: String,
         single_file_assembler: KclvmLibAssembler,
         external_pkgs: HashMap<String, String>,
+        mod_path: Option<String>,
     ) -> Self {
         Self {
             program,
@@ -216,6 +218,7 @@ impl KclvmAssembler {
             single_file_assembler,
             target: env!("KCLVM_DEFAULT_TARGET").to_string(),
             external_pkgs,
+            mod_path,
         }
     }
 
